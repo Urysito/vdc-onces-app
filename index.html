@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Onces Probables · VDC</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="modal-overlay open" id="loginOverlay">
+  <div class="modal">
+    <h3>🔒 Onces Probables</h3>
+    <p class="hint">Acceso privado — entra con la cuenta que creaste en Firebase Authentication.</p>
+    <label>Email</label>
+    <input id="loginEmail" type="email" autocomplete="username">
+    <label>Contraseña</label>
+    <input id="loginPass" type="password" autocomplete="current-password">
+    <p id="loginError" class="hint" style="color:var(--red); display:none;"></p>
+    <div class="modal-actions">
+      <button id="loginBtn" class="btn btn-accent">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="topbar-title">⚽ ONCES PROBABLES <span class="pre">pre-VDC</span></div>
+  <div class="topbar-right">
+    <span class="topbar-status" id="status">conectando…</span>
+    <button id="logoutBtn" class="btn btn-small">Salir</button>
+  </div>
+</header>
+
+<nav class="team-tabs" id="teamTabs"></nav>
+
+<main id="app">
+  <!-- ── PANEL PLANTILLA (gestionar jugadores del equipo) ── -->
+  <section class="panel roster-panel">
+    <div class="panel-head">
+      <h2>Plantilla</h2>
+      <button id="btnAddPlayer" class="btn btn-accent">+ Jugador</button>
+    </div>
+    <input id="searchInput" type="search" placeholder="Buscar jugador…" class="search-input">
+    <div id="rosterList" class="roster-list"></div>
+  </section>
+
+  <!-- ── PANEL CAMPO (formación + 11 posiciones) ── -->
+  <section class="panel field-panel">
+    <div class="panel-head">
+      <h2>Once probable</h2>
+      <select id="formacionSelect" class="select"></select>
+    </div>
+    <div class="field" id="field"></div>
+    <div class="field-actions">
+      <button id="btnResetOnce" class="btn btn-danger">Resetear once</button>
+      <button id="btnExport" class="btn">Ver JSON para VDC ENGINE</button>
+    </div>
+  </section>
+</main>
+
+<!-- ── MODAL: añadir/editar jugador ── -->
+<div class="modal-overlay" id="playerModalOverlay">
+  <div class="modal">
+    <h3 id="playerModalTitle">Nuevo jugador</h3>
+    <label>Nombre</label>
+    <input id="pmNombre" type="text" placeholder="Ej: Iñaki Williams">
+    <label>Posición</label>
+    <select id="pmPosicion"></select>
+    <label>Foto (opcional)</label>
+    <input id="pmFotoFile" type="file" accept="image/*">
+    <div id="pmFotoPreviewWrap" style="display:none;">
+      <img id="pmFotoPreview" class="foto-preview">
+      <button type="button" id="pmFotoQuitar" class="btn btn-danger btn-small">Quitar foto</button>
+    </div>
+    <p class="hint">Se guarda comprimida (miniatura) directamente en tu base de datos privada — no hace falta tarjeta ni Storage.</p>
+    <div class="modal-actions">
+      <button id="pmCancelar" class="btn">Cancelar</button>
+      <button id="pmBorrar" class="btn btn-danger" style="display:none;">Borrar</button>
+      <button id="pmGuardar" class="btn btn-accent">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: asignar slot (elegir jugador + duda + %) ── -->
+<div class="modal-overlay" id="slotModalOverlay">
+  <div class="modal">
+    <h3>Asignar posición</h3>
+    <label>Titular</label>
+    <select id="slotMain"></select>
+    <label>% de titularidad</label>
+    <select id="slotPorcentaje"></select>
+    <label class="checkbox-label"><input type="checkbox" id="slotFuego"> 🔥 En racha</label>
+    <div class="dudas-block">
+      <label>Alternativas (duda)</label>
+      <select id="slotDuda1"></select>
+      <select id="slotDuda2"></select>
+      <select id="slotDuda3"></select>
+    </div>
+    <div class="modal-actions">
+      <button id="smCancelar" class="btn">Cancelar</button>
+      <button id="smVaciar" class="btn btn-danger">Vaciar slot</button>
+      <button id="smGuardar" class="btn btn-accent">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: export JSON ── -->
+<div class="modal-overlay" id="exportModalOverlay">
+  <div class="modal modal-wide">
+    <h3>JSON para pegar en VDC ENGINE</h3>
+    <p class="hint">Mismo formato que <code>vdc_save.json</code>. Copia el bloque del equipo que quieras y pégalo en tu fichero local, o cópialo entero.</p>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button id="emCerrar" class="btn">Cerrar</button>
+      <button id="emCopiar" class="btn btn-accent">Copiar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
