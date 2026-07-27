@@ -146,26 +146,25 @@ body {
 .slot {
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 58px;
+  width: 46px;
   display: flex; flex-direction: column; align-items: center;
   cursor: pointer;
 }
 .slot .slot-photo {
-  width: 42px; height: 42px; border-radius: 50%;
+  width: 46px; height: 62px; border-radius: 6px;
   background: var(--card); border: 2px solid var(--border);
   object-fit: cover;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; color: var(--subtext);
+  font-size: 20px; color: var(--subtext);
 }
 .slot img.slot-photo { object-fit: cover; }
 .slot.filled .slot-photo { border-color: var(--accent); }
-.slot .slot-name {
-  margin-top: 2px; font-size: 9px; font-weight: 700; text-align: center;
-  max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  text-shadow: 0 1px 2px #000;
+.slot .slot-pct {
+  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; font-weight: 800; color: #00202a; background: var(--accent2);
+  border-radius: 6px; padding: 1px 5px; white-space: nowrap;
 }
-.slot .slot-pct { font-size: 8px; font-weight: 800; color: var(--accent2); }
-.slot .slot-fuego { position: absolute; top: -4px; right: 6px; font-size: 12px; }
+.slot .slot-fuego { position: absolute; top: -6px; right: -6px; font-size: 14px; }
 
 .slot.drag-over .slot-photo { border-color: var(--green); box-shadow: 0 0 0 3px rgba(46,204,113,.35); }
 .player-card.dragging { opacity: .3; }
