@@ -124,15 +124,16 @@ function computeLayout(formationKey) {
 
 // ── RENDER ───────────────────────────────────────────────────
 function renderTabs() {
-  const nav = document.getElementById("teamTabs");
-  nav.innerHTML = "";
-  EQUIPOS.forEach(eq => {
-    const btn = document.createElement("div");
-    btn.className = "team-tab" + (eq === currentTeam ? " active" : "");
-    btn.textContent = eq;
-    btn.onclick = () => { if (eq !== currentTeam) subscribeTeam(eq); };
-    nav.appendChild(btn);
-  });
+  const sel = document.getElementById("teamSelect");
+  if (!sel.options.length) {
+    EQUIPOS.forEach(eq => {
+      const opt = document.createElement("option");
+      opt.value = eq; opt.textContent = eq;
+      sel.appendChild(opt);
+    });
+    sel.onchange = () => { if (sel.value !== currentTeam) subscribeTeam(sel.value); };
+  }
+  sel.value = currentTeam;
 }
 
 function usedPlayerIds() {
@@ -158,6 +159,7 @@ function renderRoster() {
       const card = document.createElement("div");
       card.className = "player-card" + (used.has(p.id) ? " used" : "");
       card.innerHTML = `
+        <div class="pc-handle" title="Arrastra a una posición del campo">⠿</div>
         ${p.foto
           ? `<img src="${escapeAttr(p.foto)}" onerror="this.style.display='none'">`
           : `<div class="player-card-noimg">👤</div>`}
@@ -167,6 +169,9 @@ function renderRoster() {
         </div>
         <div class="pc-edit">✎</div>`;
       card.onclick = () => openPlayerModal(p.id);
+      const handle = card.querySelector(".pc-handle");
+      handle.onclick = e => e.stopPropagation();
+      handle.addEventListener("pointerdown", e => startPlayerDrag(e, p.id, card));
       list.appendChild(card);
     });
   if (!jugadores.length) {
@@ -183,6 +188,7 @@ function renderField() {
     const player = state.jugador_main_id ? getPlayer(state.jugador_main_id) : null;
     const div = document.createElement("div");
     div.className = "slot" + (player ? " filled" : "");
+    div.dataset.slot = pos.slot;
     div.style.left = pos.left + "%";
     div.style.top = pos.top + "%";
     div.innerHTML = `
@@ -196,6 +202,51 @@ function renderField() {
     div.onclick = () => openSlotModal(pos.slot);
     field.appendChild(div);
   });
+}
+
+function assignMainToSlot(slotNum, playerId) {
+  const s = teamData.slots[slotNum] || defaultSlot();
+  teamData.slots[slotNum] = { ...s, jugador_main_id: playerId };
+  saveTeamData();
+  renderAll();
+}
+
+function startPlayerDrag(e, playerId, cardEl) {
+  e.preventDefault();
+  const player = getPlayer(playerId);
+  cardEl.classList.add("dragging");
+  const ghost = document.createElement("div");
+  ghost.className = "drag-ghost";
+  ghost.innerHTML = player && player.foto ? `<img src="${escapeAttr(player.foto)}">` : "👤";
+  document.body.appendChild(ghost);
+
+  const place = (x, y) => { ghost.style.left = (x - 22) + "px"; ghost.style.top = (y - 22) + "px"; };
+  place(e.clientX, e.clientY);
+
+  function clearDragOver() {
+    document.querySelectorAll(".slot.drag-over").forEach(s => s.classList.remove("drag-over"));
+  }
+  function slotUnder(x, y) {
+    const el = document.elementFromPoint(x, y);
+    return el && el.closest(".slot");
+  }
+  function onMove(ev) {
+    place(ev.clientX, ev.clientY);
+    clearDragOver();
+    const slotEl = slotUnder(ev.clientX, ev.clientY);
+    if (slotEl) slotEl.classList.add("drag-over");
+  }
+  function onUp(ev) {
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onUp);
+    ghost.remove();
+    cardEl.classList.remove("dragging");
+    const slotEl = slotUnder(ev.clientX, ev.clientY);
+    clearDragOver();
+    if (slotEl && slotEl.dataset.slot) assignMainToSlot(+slotEl.dataset.slot, playerId);
+  }
+  document.addEventListener("pointermove", onMove);
+  document.addEventListener("pointerup", onUp);
 }
 
 function renderFormacionSelect() {
@@ -374,8 +425,17 @@ function openSlotModal(n) {
   }
   pctSel.value = s.porcentaje;
   document.getElementById("slotFuego").checked = !!s.on_fire;
+  actualizarVisibilidadDudas();
 
   openModal("slotModalOverlay");
+}
+
+// Las alternativas (duda) solo tienen sentido cuando hay dudas de verdad
+// sobre la titularidad — a partir de 50% se despliegan los huecos extra
+// para añadir alternativas, igual que en VDC ENGINE.
+function actualizarVisibilidadDudas() {
+  const pct = +document.getElementById("slotPorcentaje").value;
+  document.querySelector(".dudas-block").style.display = pct <= 50 ? "" : "none";
 }
 
 function closeSlotModal() { closeModal("slotModalOverlay"); }
@@ -509,6 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("smCancelar").onclick = closeSlotModal;
   document.getElementById("smGuardar").onclick = saveSlot;
   document.getElementById("smVaciar").onclick = clearSlot;
+  document.getElementById("slotPorcentaje").onchange = actualizarVisibilidadDudas;
 
   document.getElementById("emCerrar").onclick = () => closeModal("exportModalOverlay");
   document.getElementById("emCopiar").onclick = () => {
@@ -517,15 +578,22 @@ document.addEventListener("DOMContentLoaded", () => {
     navigator.clipboard.writeText(ta.value).then(() => alert("Copiado ✓")).catch(() => document.execCommand("copy"));
   };
 
+  const emailField = document.getElementById("loginEmail");
+  const rememberedEmail = localStorage.getItem("onces_email");
+  if (rememberedEmail) emailField.value = rememberedEmail;
+
   document.getElementById("loginBtn").onclick = () => {
-    const email = document.getElementById("loginEmail").value.trim();
+    const email = emailField.value.trim();
     const pass = document.getElementById("loginPass").value;
     const errEl = document.getElementById("loginError");
     errEl.style.display = "none";
-    auth.signInWithEmailAndPassword(email, pass).catch(err => {
-      errEl.textContent = "No se ha podido entrar: " + err.message;
-      errEl.style.display = "";
-    });
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(() => auth.signInWithEmailAndPassword(email, pass))
+      .then(() => localStorage.setItem("onces_email", email))
+      .catch(err => {
+        errEl.textContent = "No se ha podido entrar: " + err.message;
+        errEl.style.display = "";
+      });
   };
   document.getElementById("logoutBtn").onclick = () => auth.signOut();
 
