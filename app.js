@@ -8,6 +8,13 @@ let editingPlayerId = null;   // jugador que se está editando en el modal (null
 let pendingFotoFile = null;   // fichero de foto elegido en el modal, pendiente de subir
 let pendingFotoRemoved = false; // true si se ha pulsado "Quitar foto"
 
+// Convierte "MARCOS_LLORENTE.png" o "iñaki-williams.jpg" en "Marcos Llorente".
+function nombreDesdeArchivo(filename) {
+  let n = filename.replace(/\.[^.]+$/, "");
+  n = n.replace(/[_\-]+/g, " ").replace(/\s+/g, " ").trim();
+  return n.split(" ").map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w).join(" ");
+}
+
 // Redimensiona y comprime una foto a una miniatura pequeña (base64), para
 // poder guardarla directamente dentro del documento de Firestore sin
 // necesitar Storage (que exige tarjeta de facturación).
@@ -214,6 +221,34 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function escapeAttr(s) { return escapeHtml(s); }
+
+async function importarFotos(files) {
+  const statusEl = document.getElementById("importStatus");
+  statusEl.style.display = "";
+  const existentes = new Set((teamData.jugadores || []).map(p => p.nombre.toLowerCase()));
+  let importados = 0, saltados = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    statusEl.textContent = `Procesando ${i + 1}/${files.length}…`;
+    const nombre = nombreDesdeArchivo(file.name);
+    if (!nombre || existentes.has(nombre.toLowerCase())) { saltados++; continue; }
+    try {
+      const foto = await comprimirFoto(file);
+      teamData.jugadores.push({ id: uid(), nombre, posicion: POSICIONES[0], foto });
+      existentes.add(nombre.toLowerCase());
+      importados++;
+    } catch (err) {
+      console.error("Error importando", file.name, err);
+      saltados++;
+    }
+  }
+
+  statusEl.textContent = `Importados ${importados} jugador(es)` + (saltados ? `, ${saltados} omitido(s) (ya existían o no eran imagen válida)` : "") + `. Revisa/ajusta la posición de cada uno.`;
+  saveTeamData();
+  renderAll();
+  setTimeout(() => { statusEl.style.display = "none"; }, 6000);
+}
 
 // ── MODAL: JUGADOR (plantilla) ───────────────────────────────
 function openPlayerModal(id) {
@@ -437,6 +472,12 @@ function closeModal(id) { document.getElementById(id).classList.remove("open"); 
 // ── EVENTOS ────────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnAddPlayer").onclick = () => openPlayerModal(null);
+  document.getElementById("btnImportFotos").onclick = () => document.getElementById("importFotosInput").click();
+  document.getElementById("importFotosInput").onchange = e => {
+    const files = [...e.target.files];
+    e.target.value = "";
+    if (files.length) importarFotos(files);
+  };
   document.getElementById("searchInput").oninput = renderRoster;
   document.getElementById("formacionSelect").onchange = e => {
     teamData.formacion = e.target.value;
