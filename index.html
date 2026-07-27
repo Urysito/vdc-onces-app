@@ -38,8 +38,13 @@
   <section class="panel roster-panel">
     <div class="panel-head">
       <h2>Plantilla</h2>
-      <button id="btnAddPlayer" class="btn btn-accent">+ Jugador</button>
+      <div class="panel-head-btns">
+        <button id="btnImportFotos" class="btn btn-small">📥 Importar fotos</button>
+        <button id="btnAddPlayer" class="btn btn-accent">+ Jugador</button>
+      </div>
     </div>
+    <input id="importFotosInput" type="file" accept="image/*" multiple style="display:none;">
+    <p id="importStatus" class="hint" style="display:none;"></p>
     <input id="searchInput" type="search" placeholder="Buscar jugador…" class="search-input">
     <div id="rosterList" class="roster-list"></div>
   </section>
