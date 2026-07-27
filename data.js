@@ -25,20 +25,64 @@ const EQUIPOS = [
   "VILLARREAL CF",
 ];
 
-// Cada formación se describe como líneas de jugadores desde la portería (GK)
-// hacia arriba (delanteros). El campo se dibuja repartiendo cada línea en
-// horizontal. No son las coordenadas de OBS (esas son pixeles fijos para un
-// canvas concreto) — aquí generamos la disposición al vuelo, así que vale
-// para cualquier tamaño de pantalla (móvil, iPad, etc).
+// Coordenadas fijas (top%, left%) de las 11 posiciones para cada formación,
+// diseñadas a mano línea por línea (portero abajo, delanteros arriba) —
+// nada de fórmula genérica: cada formación tiene su propia disposición
+// pensada para que se vea con sentido futbolístico.
 const FORMACIONES = {
-  "4-2-3-1":   [4, 2, 3, 1],
-  "4-4-3":     [4, 3, 3],
-  "4-1-4-1":   [4, 1, 4, 1],
-  "4-4-2":     [4, 4, 2],
-  "4-4-2 ROMBO": [4, 1, 2, 1, 2],
-  "3-4-1-2":   [3, 4, 1, 2],
-  "5-2-3":     [5, 2, 3],
-  "3-4-3":     [3, 4, 3],
+  "4-2-3-1": [
+    { top: 90, left: 50 },
+    { top: 72, left: 10 }, { top: 72, left: 37 }, { top: 72, left: 63 }, { top: 72, left: 90 },
+    { top: 56, left: 30 }, { top: 56, left: 70 },
+    { top: 32, left: 20 }, { top: 32, left: 50 }, { top: 32, left: 80 },
+    { top: 14, left: 50 },
+  ],
+  "4-4-3": [
+    { top: 90, left: 50 },
+    { top: 72, left: 10 }, { top: 72, left: 37 }, { top: 72, left: 63 }, { top: 72, left: 90 },
+    { top: 46, left: 20 }, { top: 46, left: 50 }, { top: 46, left: 80 },
+    { top: 14, left: 20 }, { top: 14, left: 50 }, { top: 14, left: 80 },
+  ],
+  "4-1-4-1": [
+    { top: 90, left: 50 },
+    { top: 72, left: 10 }, { top: 72, left: 37 }, { top: 72, left: 63 }, { top: 72, left: 90 },
+    { top: 58, left: 50 },
+    { top: 34, left: 10 }, { top: 34, left: 37 }, { top: 34, left: 63 }, { top: 34, left: 90 },
+    { top: 14, left: 50 },
+  ],
+  "4-4-2": [
+    { top: 90, left: 50 },
+    { top: 72, left: 10 }, { top: 72, left: 37 }, { top: 72, left: 63 }, { top: 72, left: 90 },
+    { top: 46, left: 10 }, { top: 46, left: 37 }, { top: 46, left: 63 }, { top: 46, left: 90 },
+    { top: 16, left: 30 }, { top: 16, left: 70 },
+  ],
+  "4-4-2 ROMBO": [
+    { top: 90, left: 50 },
+    { top: 74, left: 10 }, { top: 74, left: 37 }, { top: 74, left: 63 }, { top: 74, left: 90 },
+    { top: 58, left: 50 },
+    { top: 42, left: 25 }, { top: 42, left: 75 },
+    { top: 26, left: 50 },
+    { top: 12, left: 30 }, { top: 12, left: 70 },
+  ],
+  "3-4-1-2": [
+    { top: 90, left: 50 },
+    { top: 72, left: 20 }, { top: 72, left: 50 }, { top: 72, left: 80 },
+    { top: 48, left: 10 }, { top: 48, left: 37 }, { top: 48, left: 63 }, { top: 48, left: 90 },
+    { top: 28, left: 50 },
+    { top: 12, left: 30 }, { top: 12, left: 70 },
+  ],
+  "5-2-3": [
+    { top: 90, left: 50 },
+    { top: 72, left: 10 }, { top: 72, left: 28 }, { top: 72, left: 50 }, { top: 72, left: 72 }, { top: 72, left: 90 },
+    { top: 44, left: 30 }, { top: 44, left: 70 },
+    { top: 14, left: 20 }, { top: 14, left: 50 }, { top: 14, left: 80 },
+  ],
+  "3-4-3": [
+    { top: 90, left: 50 },
+    { top: 72, left: 20 }, { top: 72, left: 50 }, { top: 72, left: 80 },
+    { top: 46, left: 10 }, { top: 46, left: 37 }, { top: 46, left: 63 }, { top: 46, left: 90 },
+    { top: 14, left: 20 }, { top: 14, left: 50 }, { top: 14, left: 80 },
+  ],
 };
 
 // Niveles de "duda" (probabilidad de titularidad), igual que en VDC ENGINE.
