@@ -102,24 +102,11 @@ function subscribeTeam(team) {
 }
 
 // ── LAYOUT DEL CAMPO ─────────────────────────────────────────
-// Genera 11 posiciones (%) a partir de las líneas de la formación:
-// portero + líneas de la formación, repartidas de abajo (portería) a arriba.
+// Lee las coordenadas fijas de la formación (definidas a mano en data.js) y
+// las empareja con el número de slot (1..11).
 function computeLayout(formationKey) {
-  const rows = FORMACIONES[formationKey];
-  const lines = [1, ...rows];
-  const totalLines = lines.length;
-  const positions = [];
-  let slotNum = 1;
-  for (let li = 0; li < totalLines; li++) {
-    const count = lines[li];
-    const top = totalLines === 1 ? 50 : 92 - li * (84 / (totalLines - 1));
-    for (let j = 0; j < count; j++) {
-      const left = count === 1 ? 50 : 12 + j * (76 / (count - 1));
-      positions.push({ slot: slotNum, top, left });
-      slotNum++;
-    }
-  }
-  return positions;
+  const coords = FORMACIONES[formationKey];
+  return coords.map((c, i) => ({ slot: i + 1, top: c.top, left: c.left }));
 }
 
 // ── RENDER ───────────────────────────────────────────────────
@@ -196,9 +183,9 @@ function renderField() {
       ${player && player.foto
         ? `<img class="slot-photo" src="${escapeAttr(player.foto)}" onerror="this.outerHTML='<div class=\\'slot-photo\\'>👤</div>'">`
         : `<div class="slot-photo">${player ? "👤" : "+"}</div>`}
-      <div class="slot-name">${player ? escapeHtml(player.nombre) : ""}</div>
       ${player ? `<div class="slot-pct">${state.porcentaje}%</div>` : ""}
     `;
+    div.title = player ? player.nombre : "Vacío — toca para asignar";
     div.onclick = () => openSlotModal(pos.slot);
     field.appendChild(div);
   });
