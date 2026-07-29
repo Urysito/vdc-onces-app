@@ -73,7 +73,8 @@ const FORMACIONES = {
   ],
   "5-2-3": [
     { top: 90, left: 50 },
-    { top: 72, left: 10 }, { top: 72, left: 28 }, { top: 72, left: 50 }, { top: 72, left: 72 }, { top: 72, left: 90 },
+    { top: 72, left: 10 }, { top: 72, left: 28 }, { top: 72, left: 50 }, { top: 72, left: 72 }, { I 
+      top: 72, left: 90 },
     { top: 44, left: 30 }, { top: 44, left: 70 },
     { top: 14, left: 20 }, { top: 14, left: 50 }, { top: 14, left: 80 },
   ],
@@ -87,5 +88,15 @@ const FORMACIONES = {
 
 // Niveles de "duda" (probabilidad de titularidad), igual que en VDC ENGINE.
 const PORCENTAJES = [95, 90, 80, 70, 60, 50];
+
+// Mismos colores que VDC ENGINE para cada nivel de % (PCT_COLORS).
+const PCT_COLORS = {
+  95: { bg: "#b8860b", text: "#fff8dc" }, // oro/dorado
+  90: { bg: "#9b59b6", text: "#ffffff" }, // lila
+  80: { bg: "#e91e8c", text: "#ffffff" }, // fucsia
+  70: { bg: "#f48fb1", text: "#1a1a2e" }, // rosa
+  60: { bg: "#e06010", text: "#ffffff" }, // naranja
+  50: { bg: "#cc1111", text: "#ffffff" }, // rojo
+};
 
 const POSICIONES = ["Portero", "Defensa", "Centrocampista", "Delantero"];
