@@ -183,7 +183,7 @@ function renderField() {
       ${player && player.foto
         ? `<img class="slot-photo" src="${escapeAttr(player.foto)}" onerror="this.outerHTML='<div class=\\'slot-photo\\'>👤</div>'">`
         : `<div class="slot-photo">${player ? "👤" : "+"}</div>`}
-      ${player ? `<div class="slot-pct">${state.porcentaje}%</div>` : ""}
+      ${player ? `<div class="slot-pct" style="background:${(PCT_COLORS[state.porcentaje] || PCT_COLORS[95]).bg};color:${(PCT_COLORS[state.porcentaje] || PCT_COLORS[95]).text}">${state.porcentaje}%</div>` : ""}
     `;
     div.title = player ? player.nombre : "Vacío — toca para asignar";
     div.onclick = () => openSlotModal(pos.slot);
@@ -407,14 +407,24 @@ function openSlotModal(n) {
   if (!pctSel.options.length) {
     PORCENTAJES.forEach(p => {
       const o = document.createElement("option"); o.value = p; o.textContent = p + "%";
+      o.style.backgroundColor = PCT_COLORS[p].bg;
+      o.style.color = PCT_COLORS[p].text;
       pctSel.appendChild(o);
     });
   }
   pctSel.value = s.porcentaje;
+  aplicarColorPorcentaje();
   document.getElementById("slotFuego").checked = !!s.on_fire;
   actualizarVisibilidadDudas();
 
   openModal("slotModalOverlay");
+}
+
+function aplicarColorPorcentaje() {
+  const pctSel = document.getElementById("slotPorcentaje");
+  const c = PCT_COLORS[+pctSel.value] || PCT_COLORS[95];
+  pctSel.style.backgroundColor = c.bg;
+  pctSel.style.color = c.text;
 }
 
 // Las alternativas (duda) solo tienen sentido cuando hay dudas de verdad
@@ -556,7 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("smCancelar").onclick = closeSlotModal;
   document.getElementById("smGuardar").onclick = saveSlot;
   document.getElementById("smVaciar").onclick = clearSlot;
-  document.getElementById("slotPorcentaje").onchange = actualizarVisibilidadDudas;
+  document.getElementById("slotPorcentaje").onchange = () => { actualizarVisibilidadDudas(); aplicarColorPorcentaje(); };
 
   document.getElementById("emCerrar").onclick = () => closeModal("exportModalOverlay");
   document.getElementById("emCopiar").onclick = () => {
