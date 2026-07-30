@@ -186,9 +186,67 @@ function renderField() {
       ${player ? `<div class="slot-pct" style="background:${(PCT_COLORS[state.porcentaje] || PCT_COLORS[95]).bg};color:${(PCT_COLORS[state.porcentaje] || PCT_COLORS[95]).text}">${state.porcentaje}%</div>` : ""}
     `;
     div.title = player ? player.nombre : "Vacío — toca para asignar";
-    div.onclick = () => openSlotModal(pos.slot);
+    div.addEventListener("pointerdown", e => startSlotDrag(e, pos.slot, div));
     field.appendChild(div);
   });
+}
+
+function swapSlots(slotA, slotB) {
+  const sa = teamData.slots[slotA] || defaultSlot();
+  const sb = teamData.slots[slotB] || defaultSlot();
+  teamData.slots[slotA] = { ...sa, jugador_main_id: sb.jugador_main_id };
+  teamData.slots[slotB] = { ...sb, jugador_main_id: sa.jugador_main_id };
+  saveTeamData();
+  renderAll();
+}
+
+// Tocar una posición abre el modal (asignar %, dudas, racha...). Arrastrarla
+// hasta otra posición ya ocupada intercambia los dos jugadores entre sí; si
+// se suelta sobre una posición vacía, simplemente se mueve.
+function startSlotDrag(e, slotNum, div) {
+  const startX = e.clientX, startY = e.clientY;
+  let dragging = false, ghost = null;
+
+  function onMove(ev) {
+    const dx = ev.clientX - startX, dy = ev.clientY - startY;
+    if (!dragging && Math.hypot(dx, dy) > 8) {
+      const state = teamData.slots[slotNum];
+      const player = state && state.jugador_main_id ? getPlayer(state.jugador_main_id) : null;
+      if (!player) return; // no hay nada que arrastrar desde una posición vacía
+      dragging = true;
+      div.classList.add("dragging");
+      ghost = document.createElement("div");
+      ghost.className = "drag-ghost";
+      ghost.innerHTML = player.foto ? `<img src="${escapeAttr(player.foto)}">` : "👤";
+      document.body.appendChild(ghost);
+    }
+    if (dragging && ghost) {
+      ghost.style.left = (ev.clientX - 22) + "px";
+      ghost.style.top = (ev.clientY - 22) + "px";
+      document.querySelectorAll(".slot.drag-over").forEach(s => s.classList.remove("drag-over"));
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const target = el && el.closest(".slot");
+      if (target && target !== div) target.classList.add("drag-over");
+    }
+  }
+  function onUp(ev) {
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onUp);
+    document.querySelectorAll(".slot.drag-over").forEach(s => s.classList.remove("drag-over"));
+    div.classList.remove("dragging");
+    if (dragging) {
+      if (ghost) ghost.remove();
+      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+      const target = el && el.closest(".slot");
+      if (target && target.dataset.slot && +target.dataset.slot !== slotNum) {
+        swapSlots(slotNum, +target.dataset.slot);
+      }
+    } else {
+      openSlotModal(slotNum);
+    }
+  }
+  document.addEventListener("pointermove", onMove);
+  document.addEventListener("pointerup", onUp);
 }
 
 function assignMainToSlot(slotNum, playerId) {
