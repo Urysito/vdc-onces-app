@@ -73,8 +73,7 @@ const FORMACIONES = {
   ],
   "5-2-3": [
     { top: 90, left: 50 },
-    { top: 72, left: 10 }, { top: 72, left: 28 }, { top: 72, left: 50 }, { top: 72, left: 72 }, { I 
-      top: 72, left: 90 },
+    { top: 72, left: 10 }, { top: 72, left: 28 }, { top: 72, left: 50 }, { top: 72, left: 72 }, { top: 72, left: 90 },
     { top: 44, left: 30 }, { top: 44, left: 70 },
     { top: 14, left: 20 }, { top: 14, left: 50 }, { top: 14, left: 80 },
   ],
