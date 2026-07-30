@@ -204,6 +204,7 @@ function swapSlots(slotA, slotB) {
 // hasta otra posición ya ocupada intercambia los dos jugadores entre sí; si
 // se suelta sobre una posición vacía, simplemente se mueve.
 function startSlotDrag(e, slotNum, div) {
+  e.preventDefault();
   const startX = e.clientX, startY = e.clientY;
   let dragging = false, ghost = null;
 
@@ -220,7 +221,8 @@ function startSlotDrag(e, slotNum, div) {
       ghost.innerHTML = player.foto ? `<img src="${escapeAttr(player.foto)}">` : "👤";
       document.body.appendChild(ghost);
     }
-    if (dragging && ghost) {
+    if (dragging) {
+      ev.preventDefault();
       ghost.style.left = (ev.clientX - 22) + "px";
       ghost.style.top = (ev.clientY - 22) + "px";
       document.querySelectorAll(".slot.drag-over").forEach(s => s.classList.remove("drag-over"));
@@ -229,14 +231,19 @@ function startSlotDrag(e, slotNum, div) {
       if (target && target !== div) target.classList.add("drag-over");
     }
   }
-  function onUp(ev) {
+  function cleanup() {
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerup", onUp);
+    document.removeEventListener("pointercancel", onCancel);
     document.querySelectorAll(".slot.drag-over").forEach(s => s.classList.remove("drag-over"));
     div.classList.remove("dragging");
-    if (dragging) {
-      if (ghost) ghost.remove();
-      const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    if (ghost) { ghost.remove(); ghost = null; }
+  }
+  function onUp(ev) {
+    const wasDragging = dragging;
+    const el = wasDragging ? document.elementFromPoint(ev.clientX, ev.clientY) : null;
+    cleanup();
+    if (wasDragging) {
       const target = el && el.closest(".slot");
       if (target && target.dataset.slot && +target.dataset.slot !== slotNum) {
         swapSlots(slotNum, +target.dataset.slot);
@@ -245,8 +252,10 @@ function startSlotDrag(e, slotNum, div) {
       openSlotModal(slotNum);
     }
   }
-  document.addEventListener("pointermove", onMove);
+  function onCancel() { cleanup(); }
+  document.addEventListener("pointermove", onMove, { passive: false });
   document.addEventListener("pointerup", onUp);
+  document.addEventListener("pointercancel", onCancel);
 }
 
 function assignMainToSlot(slotNum, playerId) {
@@ -276,22 +285,29 @@ function startPlayerDrag(e, playerId, cardEl) {
     return el && el.closest(".slot");
   }
   function onMove(ev) {
+    ev.preventDefault();
     place(ev.clientX, ev.clientY);
     clearDragOver();
     const slotEl = slotUnder(ev.clientX, ev.clientY);
     if (slotEl) slotEl.classList.add("drag-over");
   }
-  function onUp(ev) {
+  function cleanup() {
     document.removeEventListener("pointermove", onMove);
     document.removeEventListener("pointerup", onUp);
+    document.removeEventListener("pointercancel", onCancel);
     ghost.remove();
     cardEl.classList.remove("dragging");
-    const slotEl = slotUnder(ev.clientX, ev.clientY);
     clearDragOver();
+  }
+  function onUp(ev) {
+    const slotEl = slotUnder(ev.clientX, ev.clientY);
+    cleanup();
     if (slotEl && slotEl.dataset.slot) assignMainToSlot(+slotEl.dataset.slot, playerId);
   }
-  document.addEventListener("pointermove", onMove);
+  function onCancel() { cleanup(); }
+  document.addEventListener("pointermove", onMove, { passive: false });
   document.addEventListener("pointerup", onUp);
+  document.addEventListener("pointercancel", onCancel);
 }
 
 function renderFormacionSelect() {
